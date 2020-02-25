@@ -1,4 +1,4 @@
-#include "mpi_Intracomm.h"
+#include "mpi_Comm.h"
 #include "jni_mpi.h"
 #include "jni_mpi_op.h"
 #include "jni_mpi_request.h"
@@ -6,12 +6,12 @@
 #include "malloc.h"
 
 /*
- * Class:     mpi_Intracomm
+ * Class:     mpi_Comm
  * Method:    _ireduce
  * Signature: (Ljava/lang/Object;Ljava/lang/Object;IIIJJIJ)Lmpi/Request;
  */
 JNIEXPORT jobject JNICALL 
-Java_mpi_Intracomm__1ireduce(
+Java_mpi_Comm__1ireduce(
     JNIEnv *env, jclass class, 
     jobject sendbuff, jobject recvbuff, jint sendoffset, jint recvoffset, 
     jint count, jlong datatype, jlong op, jint root,long comm)

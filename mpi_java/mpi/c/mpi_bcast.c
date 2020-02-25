@@ -1,13 +1,13 @@
-#include "mpi_Intracomm.h"
+#include "mpi_Comm.h"
 #include "jni_mpi.h"
 
 /*
- * Class:     mpi_Intracomm
+ * Class:     mpi_Comm
  * Method:    _bcast
  * Signature: (Ljava/lang/Object;IIJIJ)V
  */
 JNIEXPORT void JNICALL 
-Java_mpi_Intracomm__1bcast(
+Java_mpi_Comm__1bcast(
     JNIEnv *env, 
     jclass class, 
     jobject buff, jint offset, jint count, jlong datatype, 

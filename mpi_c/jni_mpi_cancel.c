@@ -24,6 +24,16 @@ Java_org_mpich_MPI_MPI_1Cancel(
     return result;
 }
 
+void some()
+{
+    MPI_Comm comm; // Communicator
+    MPI_Datatype datatype; // Datatype
+    MPI_Op operation; // Operation
+    MPI_Request req; // Request
+    MPI_File file; // File
+    ...
+}
+
 /*
  * Class:     org_mpich_MPI
  * Method:    MPI_Test_cancelled

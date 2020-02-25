@@ -42,7 +42,8 @@ public class CartCreate{
 
             int[] recv = new int[4];
             comm.recv(recv, 0, 4, MPI.INT, 11, 0, null);
-            System.out.println(Arrays.toString(recv));
+            boolean check = Arrays.equals(recv, new int[] {1,2,3,4});
+            Utils.check(rank, check, "CartCreate");
         }
         MPI.Finalize();
     }

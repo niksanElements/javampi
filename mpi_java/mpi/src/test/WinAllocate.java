@@ -41,7 +41,7 @@ public class WinAllocate {
         // System.out.printf("Rank %d running on %s\n", id, name);
 
         Win win = MPI.COMM_WORLD.win_allocate(NUM_ELEMENT*4, 1, MPI.INFO_NULL);
-        sharedbuffer = win.getByteBuffer(ByteOrder.BIG_ENDIAN);
+        sharedbuffer = win.getByteBuffer();
 
         for(int i = 0;i < NUM_ELEMENT;i++){
             System.out.printf("%d\n",sharedbuffer.getInt(i));
@@ -53,12 +53,6 @@ public class WinAllocate {
             sharedbuffer.putInt(i, id);
             localbuffer.putInt(i, 0);
         }
-
-        // System.out.printf("Rank %d sets data in the shared memory:", id);
-
-        // for (int i = 0; i < NUM_ELEMENT; i++)
-        //     System.out.printf("%d %02d",id, sharedbuffer.getInt(i));
-
         System.out.println();
 
         win.fence(0);
@@ -88,11 +82,11 @@ public class WinAllocate {
             win.put(localbuffer, 0, NUM_ELEMENT, MPI.INT_BUFFER, 0, 0, NUM_ELEMENT, MPI.INT_BUFFER);
 
         win.fence(0);
-
-        // System.out.printf("Rank %d has new data in the shared memory:", id);
-
-        if(sharedbuffer.getInt(0) != id){
-            System.out.println("Error");
+        
+        if(sharedbuffer.getInt(2) != id){
+            Utils.sleepRand(200);
+            System.out.printf("Error %d - %d\n",sharedbuffer.getInt(0),id);
+            System.out.flush();
         }
 
         for (int i = 0; i < NUM_ELEMENT; i++){

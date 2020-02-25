@@ -174,7 +174,7 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved)
     cls = (*env)->FindClass(env,"mpi/op/ObjectOp");
     gJniObjectOpCallback = (*env)->GetMethodID(env,cls,"_operation",
         "(Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V");
-    if(gJniObjectOpCallback == NULL){
+    if(gJniObjectOpCallback == NULL){       
         return JNI_ERR;
     }
     // Win/Win_allocate_ret
@@ -194,6 +194,10 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved)
     }
     gJniWinReturnSize = (*env)->GetFieldID(env,gJniWinReturnClass,"size","I");
     if(gJniWinReturnSize == NULL){
+        return JNI_ERR;
+    }
+    gJniWinReturnBuffer = (*env)->GetFieldID(env,gJniWinReturnClass,"buffer","Ljava/nio/ByteBuffer;");
+    if(gJniWinReturnBuffer == NULL){
         return JNI_ERR;
     }
 

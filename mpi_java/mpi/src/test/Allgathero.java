@@ -33,15 +33,17 @@ public class Allgathero {
         
         ByteBuffer buff = ByteBuffer.allocateDirect(124);
         ByteBuffer buff1 =ByteBuffer.allocateDirect(124);
-        long start = System.nanoTime();
         MPI.COMM_WORLD.allgather(hSend, 0, 1, her, hRecv, 0, 1, her, buff, buff1);
-        long end = System.nanoTime();
-    
-        System.out.printf("%f\n", (end-start)/1000000.0);
-        Utils.sleepRand(500);
-        for(int i = 0;i < 10;i++){
-            System.out.printf("%d, ID: %d ID2: %d\n",i,hRecv[i].getId(),hRecv[i].getId2());
+
+        boolean check = true;
+
+        for(int i = 0;i < hRecv.length && check;i++){
+            if(hRecv[i].getId() != i+1 && hRecv[i].getId2() != (i+1)*(i+1)){
+                check = false;
+            }
         }
+
+        Utils.check(rank,check,"Allgathero");
 
         MPI.Finalize();
     }

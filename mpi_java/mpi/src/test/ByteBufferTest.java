@@ -28,8 +28,12 @@ public class ByteBufferTest {
             long end = System.nanoTime();
             System.out.println((end-start)/1000000.0);
             buff.position(0);
-            System.out.printf("%d %d %d\n",
-                buff.get(),buff.get(),buff.get());
+            // System.out.printf("%d %d %d\n",
+            //     buff.get(),buff.get(),buff.get());
+            boolean check = buff.get() == 0;
+            check &= buff.get() == 34;
+            check &= buff.get() == 0;
+            Utils.check(rank, check, "ByteBufferTest");
         }
 
         MPI.Finalize();

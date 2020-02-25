@@ -249,6 +249,118 @@ JNIEXPORT void JNICALL Java_mpi_Comm__1barrier
 JNIEXPORT jobject JNICALL Java_mpi_Comm__1ibarrier
   (JNIEnv *, jclass, jlong);
 
+/*
+ * Class:     mpi_Comm
+ * Method:    _bcast
+ * Signature: (Ljava/lang/Object;IIJIJ)V
+ */
+JNIEXPORT void JNICALL Java_mpi_Comm__1bcast
+  (JNIEnv *, jclass, jobject, jint, jint, jlong, jint, jlong);
+
+/*
+ * Class:     mpi_Comm
+ * Method:    _ibcast
+ * Signature: (Ljava/lang/Object;IIJIJ)Lmpi/Request;
+ */
+JNIEXPORT jobject JNICALL Java_mpi_Comm__1ibcast
+  (JNIEnv *, jclass, jobject, jint, jint, jlong, jint, jlong);
+
+/*
+ * Class:     mpi_Comm
+ * Method:    _scatter
+ * Signature: (Ljava/lang/Object;IIJLjava/lang/Object;IIJIJ)V
+ */
+JNIEXPORT void JNICALL Java_mpi_Comm__1scatter
+  (JNIEnv *, jclass, jobject, jint, jint, jlong, jobject, jint, jint, jlong, jint, jlong);
+
+/*
+ * Class:     mpi_Comm
+ * Method:    _iscatter
+ * Signature: (Ljava/lang/Object;IIJLjava/lang/Object;IIJIJ)Lmpi/Request;
+ */
+JNIEXPORT jobject JNICALL Java_mpi_Comm__1iscatter
+  (JNIEnv *, jclass, jobject, jint, jint, jlong, jobject, jint, jint, jlong, jint, jlong);
+
+/*
+ * Class:     mpi_Comm
+ * Method:    _gather
+ * Signature: (Ljava/lang/Object;IIJLjava/lang/Object;IIJIJ)V
+ */
+JNIEXPORT void JNICALL Java_mpi_Comm__1gather
+  (JNIEnv *, jclass, jobject, jint, jint, jlong, jobject, jint, jint, jlong, jint, jlong);
+
+/*
+ * Class:     mpi_Comm
+ * Method:    _igather
+ * Signature: (Ljava/lang/Object;IIJLjava/lang/Object;IIJIJ)Lmpi/Request;
+ */
+JNIEXPORT jobject JNICALL Java_mpi_Comm__1igather
+  (JNIEnv *, jclass, jobject, jint, jint, jlong, jobject, jint, jint, jlong, jint, jlong);
+
+/*
+ * Class:     mpi_Comm
+ * Method:    _allgather
+ * Signature: (Ljava/lang/Object;IIJLjava/lang/Object;IIJJ)V
+ */
+JNIEXPORT void JNICALL Java_mpi_Comm__1allgather
+  (JNIEnv *, jclass, jobject, jint, jint, jlong, jobject, jint, jint, jlong, jlong);
+
+/*
+ * Class:     mpi_Comm
+ * Method:    _iallgather
+ * Signature: (Ljava/lang/Object;IIJLjava/lang/Object;IIJJ)Lmpi/Request;
+ */
+JNIEXPORT jobject JNICALL Java_mpi_Comm__1iallgather
+  (JNIEnv *, jclass, jobject, jint, jint, jlong, jobject, jint, jint, jlong, jlong);
+
+/*
+ * Class:     mpi_Comm
+ * Method:    _alltoall
+ * Signature: (Ljava/lang/Object;IIJLjava/lang/Object;IIJJ)V
+ */
+JNIEXPORT void JNICALL Java_mpi_Comm__1alltoall
+  (JNIEnv *, jclass, jobject, jint, jint, jlong, jobject, jint, jint, jlong, jlong);
+
+/*
+ * Class:     mpi_Comm
+ * Method:    _ialltoall
+ * Signature: (Ljava/lang/Object;IIJLjava/lang/Object;IIJJ)Lmpi/Request;
+ */
+JNIEXPORT jobject JNICALL Java_mpi_Comm__1ialltoall
+  (JNIEnv *, jclass, jobject, jint, jint, jlong, jobject, jint, jint, jlong, jlong);
+
+/*
+ * Class:     mpi_Comm
+ * Method:    _reduce
+ * Signature: (Ljava/lang/Object;Ljava/lang/Object;IIIJJIJ)V
+ */
+JNIEXPORT void JNICALL Java_mpi_Comm__1reduce
+  (JNIEnv *, jclass, jobject, jobject, jint, jint, jint, jlong, jlong, jint, jlong);
+
+/*
+ * Class:     mpi_Comm
+ * Method:    _ireduce
+ * Signature: (Ljava/lang/Object;Ljava/lang/Object;IIIJJIJ)Lmpi/Request;
+ */
+JNIEXPORT jobject JNICALL Java_mpi_Comm__1ireduce
+  (JNIEnv *, jclass, jobject, jobject, jint, jint, jint, jlong, jlong, jint, jlong);
+
+/*
+ * Class:     mpi_Comm
+ * Method:    _allreduce
+ * Signature: (Ljava/lang/Object;Ljava/lang/Object;IIIJJJ)V
+ */
+JNIEXPORT void JNICALL Java_mpi_Comm__1allreduce
+  (JNIEnv *, jclass, jobject, jobject, jint, jint, jint, jlong, jlong, jlong);
+
+/*
+ * Class:     mpi_Comm
+ * Method:    _iallreduce
+ * Signature: (Ljava/lang/Object;Ljava/lang/Object;IIIJJJ)Lmpi/Request;
+ */
+JNIEXPORT jobject JNICALL Java_mpi_Comm__1iallreduce
+  (JNIEnv *, jclass, jobject, jobject, jint, jint, jint, jlong, jlong, jlong);
+
 #ifdef __cplusplus
 }
 #endif

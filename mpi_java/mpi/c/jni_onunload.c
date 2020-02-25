@@ -3,6 +3,7 @@
 #include "jni_mpi_comm.h"
 #include "jni_mpi_status.h"
 #include "jni_mpi_op.h"
+#include "jni_mpi_win.h"
 
 JNIEXPORT void JNICALL
 JNI_OnUnload(JavaVM *vm, void *reserved)
@@ -19,4 +20,5 @@ JNI_OnUnload(JavaVM *vm, void *reserved)
     (*env)->DeleteGlobalRef(env,gJniDatatypeClass);
     (*env)->DeleteGlobalRef(env,gJniStatusClass);
     (*env)->DeleteGlobalRef(env,gJniOpClass);
+    (*env)->DeleteGlobalRef(env,gJniWinReturnClass);
 }

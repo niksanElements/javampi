@@ -217,16 +217,18 @@ public class MPI {
 	 * Initialize all handlers!
 	 */
 	private static native void initNative();
-	
+	// TODO: change the name from Init to init.
 	public static void Init(String[] args) {
 		isInitialized = true;
 		_init(args);
 	}
+	// TODO: change the name from Init_thread to init_thread
 	public static int Init_thread(String[] args,int required){
 		isInitialized = true;
 
 		return _init_thread(args, required);
 	}
+	// TODO: change the name from Finalize ot finalize.
 	public static void Finalize() {
 		isInitialized = false;
 		isFinalized = true;
@@ -238,7 +240,7 @@ public class MPI {
 	 * version 0.0.1
 	 * @return
 	 */
-	public int jni_interface_version(){
+	public int java_mpi_interface_version(){
 		return 0x000001;
 	}
 	
@@ -256,6 +258,9 @@ public class MPI {
 	/**
 	 * This function is used by Comm.bsend (MPI_BSend)
 	 * @param buff
+	 */
+	/**
+	 * MPI_Buffer_detach
 	 */
 	public static void buffer_detach(ByteBuffer buff) {
 		_buffer_detach(buff);
@@ -320,7 +325,7 @@ public class MPI {
 		_publish_name(servicename, info.getHandler(), portname);
 	}
 	private static native void _publish_name(String servicename,long info,String portname);
-	// MPI_Ubpublish_name
+	// MPI_Unpublish_name
 	public static void unpublish_name(String servicename,Info info,String portname){
 		_unpublish_name(servicename, info.getHandler(), portname);
 	}

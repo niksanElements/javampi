@@ -51,6 +51,7 @@ typedef struct JNI_Datatype_struct {
     fBufferControl setBuffer;
     jboolean isCustom;
     // operation call
+    // TODO: remove op_call 
     void (*op_call)(JNIEnv*,jobject,const void*,void*);    
 } tJniType;
 

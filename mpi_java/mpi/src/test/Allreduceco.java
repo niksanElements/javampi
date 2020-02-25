@@ -30,12 +30,11 @@ public class Allreduceco {
             public Object operation(Object a, Object b) {
                 Here _a = (Here)a;
                 Here _b = (Here)b;
-                System.out.printf("%d %d\n",_a.getId(),_b.getId());
+                // System.out.printf("%d %d\n",_a.getId(),_b.getId());
                 _b.setId(_b.getId()+_a.getId());
                 return _b;
             }
         } , true);
-
 
         Datatype.commit(her);
         op.create(her);
@@ -53,10 +52,14 @@ public class Allreduceco {
         MPI.COMM_WORLD.allreduce(hSend, hRecv, 0, 0, 1, her, op, buff,buff1);
         long end = System.nanoTime();
 
-        Utils.sleepRand(500);
+        // Utils.sleepRand(500);
         System.out.printf("%f\n", (end-start)/1000000.0);
 
-        System.out.printf("result: %d\n",hRecv[0].getId());
+        int size = MPI.COMM_WORLD.size();
+        int sum = size*(size-1)/2;
+        boolean check  = sum == hRecv[0].getId();
+
+        Utils.check(rank, check, "Allreduceco");
 
         MPI.Finalize();
     }

@@ -1,13 +1,13 @@
-#include "mpi_Intracomm.h"
+#include "mpi_Comm.h"
 #include "jni_mpi.h"
 
 /*
- * Class:     mpi_Intracomm
+ * Class:     mpi_Comm
  * Method:    _alltoall
  * Signature: (Ljava/lang/Object;IIJLjava/lang/Object;IIJJ)V
  */
 JNIEXPORT void JNICALL 
-Java_mpi_Intracomm__1alltoall(
+Java_mpi_Comm__1alltoall(
     JNIEnv *env, jclass class, 
     jobject sendbuff, jint sendoffset, jint sendcount, jlong sendtype, 
     jobject recvbuff, jint recvoffset, jint recvcount, jlong recvtype, 

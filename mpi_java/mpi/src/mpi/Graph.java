@@ -14,6 +14,7 @@ public class Graph extends Intracomm
     private static native void _graph_get(long comm,int offsetindx,int maxindex,
         int offsetedges,int maxedges, int indx[], int edges[]);
     // MPMI_Graphdims_get
+    // TODO: rework that
 	public int nedges(){
 		return _get_graphdims(this.handler, true);
 	}

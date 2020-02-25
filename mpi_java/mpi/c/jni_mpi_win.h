@@ -7,5 +7,6 @@ jclass gJniWinReturnClass;
 jfieldID gJniWinReturnWin;
 jfieldID gJniWinReturnAddress;
 jfieldID gJniWinReturnSize;
+jfieldID gJniWinReturnBuffer;
 
 #endif // JNI_MPI_WIN_H_

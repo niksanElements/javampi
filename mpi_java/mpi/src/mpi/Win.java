@@ -21,25 +21,26 @@ public class Win {
 
     private ByteBuffer buffer;
 
-    private static Field _address;
-    private static Field _capacity;
+    // private static Field _address;
+    // private static Field _capacity;
 
-    static {
-        try{
-            _address = Buffer.class.getDeclaredField("address");
-            _address.setAccessible(true);
-            _capacity = Buffer.class.getDeclaredField("capacity");
-            _capacity.setAccessible(true);
-        }
-        catch(NoSuchFieldException ex){
-            ex.printStackTrace();
-        }
-    }
+    // static {
+    //     try{
+    //         _address = Buffer.class.getDeclaredField("address");
+    //         _address.setAccessible(true);
+    //         _capacity = Buffer.class.getDeclaredField("capacity");
+    //         _capacity.setAccessible(true);
+    //     }
+    //     catch(NoSuchFieldException ex){
+    //         ex.printStackTrace();
+    //     }
+    // }
 
     public static class Win_allocate_ret {
         public long win;
         public long address;
         public int size;
+        ByteBuffer buffer;
     }
 
     public Win(long handler,ByteBuffer buffer){
@@ -55,44 +56,49 @@ public class Win {
         this.handler = in.win;
         this.address = in.address;
         this.capacity = capacity;
-        this.buffer = null;
+        this.buffer = in.buffer;
 
         // this._prepare_fields();
     }
 
-    public ByteBuffer getByteBuffer(ByteOrder order){
-        ByteBuffer buffer = null;
-        // if allocate form the MPI
-        if(this.address != 0 && this.capacity != 0){
-            // allocate empty bytebuffer
-            buffer = _byteBuffer(this.address, this.capacity,order);
-        }
-        // if allocate from a user
-        else if(this.buffer != null){
-            buffer = this.buffer;
-        }
+    public ByteBuffer getByteBuffer(){
+        // ByteBuffer buffer = null;
+        // if(this.buffer == null){
+        //     // if allocate form the MPI
+        //     if(this.address != 0 && this.capacity != 0){
+        //         // allocate empty bytebuffer
+        //         buffer = _byteBuffer(this.address, this.capacity,order);
+        //     }
+        //     // if allocate from a user
+        //     else if(this.buffer != null){
+        //         buffer = this.buffer;
+        //     }
+        // }
+        // else{
+        //     buffer = this.buffer;
+        // }
 
-        return buffer;
+        return this.buffer;
     }
 
-    private static ByteBuffer _byteBuffer(long address,int capacity,ByteOrder order){
-        // allocate empty bytebuffer
-        ByteBuffer buffer = ByteBuffer.allocateDirect(0).order(order);
-        // set address&capacity
-        try{
-            _address.setLong(buffer, address);
-            _capacity.setInt(buffer, capacity);
+    // private static ByteBuffer _byteBuffer(long address,int capacity,ByteOrder order){
+    //     // allocate empty bytebuffer
+    //     ByteBuffer buffer = ByteBuffer.allocateDirect(0).order(order);
+    //     // set address&capacity
+    //     try{
+    //         _address.setLong(buffer, address);
+    //         _capacity.setInt(buffer, capacity);
 
-            buffer.position(0);
-            buffer.limit(capacity);
-        }
-        catch(IllegalAccessException ex){
-            ex.printStackTrace();
-            return null;
-        }
+    //         buffer.position(0);
+    //         buffer.limit(capacity);
+    //     }
+    //     catch(IllegalAccessException ex){
+    //         ex.printStackTrace();
+    //         return null;
+    //     }
 
-        return buffer;
-    }
+    //     return buffer;
+    // }
 
     // MPI_Win_fence
     public void fence(int _assert){
@@ -130,12 +136,12 @@ public class Win {
     }
     private static native void _flush(int rank,long win);
     // MPI_Win_flush_all
-    private void flush_all(){
+    public void flush_all(){
         _flush_all(this.handler);
     }
     private static native void _flush_all(long win);
      // MPI_Win_flush_local
-     public void flush_local(int rank){
+    public void flush_local(int rank){
         _flush_local(rank,this.handler);
     }
     private static native void _flush_local(int rank,long win);
@@ -207,13 +213,13 @@ public class Win {
     private static native long _free(long win);
 
     // MPI_Win_shared_query
-    public ByteBuffer shared_query(int rank,ByteOrder order){
+    public ByteBuffer shared_query(int rank){
         ByteBuffer buff = null;
         Win_allocate_ret ret = new Win_allocate_ret();
 
         _shared_query(this.handler, rank, ret);
 
-        buff = _byteBuffer(ret.address, ret.size,order);
+        buff = ret.buffer;
 
         return buff;
     }

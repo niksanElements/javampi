@@ -19,7 +19,6 @@ public class Cart extends Intracomm {
 		return _cart_rank(this.handler,offset,ndims,coords);
 	}
 	private static native int _cart_rank(long comm,int offset,int ndims,int[] coords);
-	// TODO: MPI_Cart_shift
 	// MPI_Cart_get
 	public void get(int offsetdims,int maxdims,int[] dims,
 		int offsetperiods,int[] periods,int offsetcoords,int[] coords){
@@ -29,6 +28,7 @@ public class Cart extends Intracomm {
 	private static native void _cart_get(long comm,int offsetdims,int maxdims,int[] dims,
         int offsetperiods,int[] periods,int offsetcoords,int[] coords);
     // MPI_Cart_shift
+    // TODO: rework that function
     public int source(int direction,int disp){
         return _shift(this.handler, direction, disp, true);
     }

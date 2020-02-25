@@ -17,24 +17,20 @@ public class OpenPort {
     */
 
     public static void main(String[] args) {
-
         String port1,port2;
         Intercomm comm1,comm2;
         int[] data = new int[10];
-
         MPI.Init(args);
         int size = MPI.COMM_WORLD.size();
         int rank = MPI.COMM_WORLD.rank();
-        if (size < 3)
-        {
+        if (size < 3){
             System.out.printf("Three processes needed to run this test.\n");
             System.out.flush();
             MPI.Finalize();
             return;
         }
 
-        if (rank == 0)
-        {
+        if (rank == 0){
             System.out.printf("0: opening ports.\n");
             System.out.flush();
             port1 = MPI.open_port(MPI.INFO_NULL);
@@ -42,13 +38,10 @@ public class OpenPort {
             System.out.printf("opened port1: <%s>\n", port1);
             System.out.printf("opened port2: <%s>\n", port2);
             System.out.flush();
-
             char[] _port1 = port1.toCharArray();
             char[] _port2 = port2.toCharArray();
-
             MPI.COMM_WORLD.send(_port1, 0, _port1.length, MPI.CHAR, 1, 0, null);
             MPI.COMM_WORLD.send(_port2, 0, _port2.length, MPI.CHAR, 2, 0, null);
-
             System.out.printf("accepting port2.\n");
             System.out.flush();
             comm1 = MPI.COMM_SELF.accept(port1, MPI.INFO_NULL, 0);
@@ -57,7 +50,6 @@ public class OpenPort {
             comm2 = MPI.COMM_SELF.accept(port2, MPI.INFO_NULL, 0);
             MPI.close_port(port1);
             MPI.close_port(port2);
-
             data[0] = 1; data[1] = 2; data[2] = 3;
             comm1.send(data, 0, 3, MPI.INT, 0, 0, null);
             System.out.printf("sended %s to process 1.\n",Arrays.toString(data));
@@ -66,12 +58,9 @@ public class OpenPort {
             comm2.send(data, 0, 3, MPI.INT, 0, 0, null);
             System.out.printf("sended %s to process 2.\n",Arrays.toString(data));
             System.out.flush();
-
-            comm1.disconnect();
-            comm2.disconnect();
+            comm1.disconnect();comm2.disconnect();
         }
-        else if (rank == 1)
-        {
+        else if (rank == 1){
             char[] _port1 = new char[1028];
             MPI.COMM_WORLD.recv(_port1, 0, 1028, MPI.CHAR, 0, 0, null);
             port1 = new String(_port1);
@@ -81,8 +70,7 @@ public class OpenPort {
             System.out.flush();
             comm1.disconnect();
         }
-        else if (rank == 2)
-        {
+        else if (rank == 2){
             char[] _port2 = new char[1028];
             MPI.COMM_WORLD.recv(_port2, 0, 1028, MPI.CHAR, 0, 0, null);
             port2 = new String(_port2);

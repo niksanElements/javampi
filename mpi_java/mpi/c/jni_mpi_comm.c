@@ -53,10 +53,12 @@ Java_mpi_Comm__1size(
 
     if(result == MPI_ERR_COMM){
         mpiErrComm(env,"MPI_Comm_size");
-    }
+        }
     else if(result == MPI_ERR_ARG){
         mpiErrArg(env,"MPI_Comm_size");
     }
 
     return size;
 }
+
+

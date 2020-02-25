@@ -11,7 +11,11 @@ import mpi.op.Op;
  * @author nikolay
  *
  */
-public class Comm {
+
+ /**
+  * TODO: set broadcast here
+  */
+public class Comm implements IFree {
 	protected long handler;
 
 	// null handler
@@ -49,6 +53,7 @@ public class Comm {
 	private static native int _size(long handler);
 
 	// MPI_Comm_free
+	@Override
 	public void free(){
 		if(!this.isNull())
 			_free(this.handler);
@@ -224,7 +229,7 @@ public class Comm {
 	}
 	private static native void _rsend(Object buff,int offset,int count,
 		long datatype,int source,int tag,long comm);	
-
+// TODO: remove a object return argument
 	// MPI_RECV
 	public Status recv(Object buff,int offset,int count,
 		Datatype datatype,int source,int tag,ByteBuffer objBuff
@@ -566,4 +571,798 @@ public class Comm {
 	}
 	private static native Request _ibarrier(long comm);
 	
+	/**
+	 * collective communications
+	 */
+	// MPI_Bcast
+	public void bcast(Object buff,int offset,int count,Datatype datatype,
+		int root,ByteBuffer objBuff
+	){
+		MPI.checkInitialization();
+		Object _buff = buff;
+		// send preparations
+		if(!datatype.isPrimitive()){
+			if(objBuff == null){
+				int cap = count*datatype.size();
+				objBuff = ByteBuffer.allocateDirect(cap);
+			}
+			else{
+				// completely reset the buffer
+				objBuff.limit(objBuff.capacity());
+				objBuff.rewind();
+			}
+			if(((Object[])buff)[offset] != null){
+				// if we are ine receive process then
+				// we don't fill the buffer
+				fillBuffer(buff, offset, count,datatype,objBuff);
+			}
+			_buff = objBuff;
+		}
+		
+		_bcast(_buff, offset, count, datatype.getHandler(), 
+			root, this.handler);
+
+		if(!datatype.isPrimitive()){
+			Object[] objArr = (Object[])buff;
+			if(((Object[])buff)[offset] == null){
+				// if we are in the receive process, we are going to
+				// fill the object array
+				for(int i = offset;i < (offset+count);i++){
+					objArr[i] = datatype.constructFromByteByffer(objBuff);
+				}
+			}
+		}
+	}
+	private static native void _bcast(Object buff,int offset,int count,
+		long datatype,int root,long comm);
+	// MPI_Ibcast
+	public Request ibcast(Object buff,int offset, int count,Datatype datatype,int root,
+		ByteBuffer objBuff){
+		sendRecvInit(buff);
+		// TODO: implement object conversation
+		if(!datatype.isPrimitive()){
+			if(objBuff == null){
+				throw new NullPointerException();
+			}
+			else{
+				// completely reset the buffer
+				objBuff.limit(objBuff.capacity());
+				objBuff.rewind();
+			}
+			if(((Object[])buff)[offset] != null){
+				// if we are ine receive process then
+				// we don't fill the buffer
+				fillBuffer(buff, offset, count,datatype,objBuff);
+			}
+
+			return _ibcast(objBuff, offset, count, datatype.getHandler(), 
+				root, this.handler);
+		}
+		else{
+			return _ibcast(buff, offset, count, datatype.getHandler(), 
+				root, this.handler);
+		}
+	}
+	private static native Request _ibcast(Object buff,int offset,int count,long datatype,
+		int root,long comm);
+	// MPI_Scatter
+	public void scatter(Object sendbuff, int sendoffset,int sendcount,Datatype sendtype,
+		Object recvbuff,int recvoffset,int recvcount,Datatype recvtype,
+		int root, ByteBuffer sendObjBuff,ByteBuffer recvObjBuff
+	){
+		MPI.checkInitialization();
+		Object _sendbuff = sendbuff;
+		Object _recvbuff = recvbuff;
+		// send preparations
+		if(sendbuff != null){
+			if(rank() == root){
+				if(!sendtype.isPrimitive()){
+					int _size = size();
+					if(sendObjBuff == null){
+						int cap = recvcount*sendtype.size()*_size;
+						sendObjBuff = ByteBuffer.allocateDirect(cap);
+					}
+					else{
+						// completely reset the buffer
+						sendObjBuff.limit(sendObjBuff.capacity());
+						sendObjBuff.rewind();
+					}
+					if(((Object[])sendbuff)[sendoffset] != null){
+						// if we are ine receive process then
+						// we don't fill the buffer
+						fillBuffer(sendbuff, sendoffset, sendcount*_size,sendtype,sendObjBuff);
+					}
+					_sendbuff = sendObjBuff;
+				}
+			}
+			else{
+				_sendbuff = null;
+			}
+		}
+		// receive preparations
+		if(recvbuff != null){
+			if(!recvtype.isPrimitive()){
+				int cap = recvcount*recvtype.size();
+				if(recvObjBuff == null){
+					recvObjBuff = ByteBuffer.allocateDirect(cap);
+				}
+				else{
+					// completely reset the buffer
+					recvObjBuff.limit(recvObjBuff.capacity());
+					recvObjBuff.rewind();
+				}
+				_recvbuff = recvObjBuff;
+			}
+		}
+
+		_scatter(_sendbuff, sendoffset, sendcount, sendtype.getHandler(),  
+			_recvbuff, recvoffset, recvcount, recvtype.getHandler(), 
+			root,this.handler);
+
+		if(recvbuff != null){
+			if(!recvtype.isPrimitive()){
+				Object[] objArr = (Object[])recvbuff;
+				for(int i = recvoffset;i < (recvoffset+recvcount);i++){
+					objArr[i] = recvtype.constructFromByteByffer(recvObjBuff);
+				}
+			}
+		}
+	}
+	private static native void _scatter(Object sendbuff,int sendoffset,int sendcount,long sendtype,
+		Object recvbuff,int recvoffset,int recvcount,long recvtype,
+		int root, long comm);
+	// MPI_Iscatter
+	public Request iscatter(Object sendbuff, int sendoffset,int sendcount,Datatype sendtype,
+		Object recvbuff,int recvoffset,int recvcount,Datatype recvtype,
+		int root, ByteBuffer sendObjBuff,ByteBuffer recvObjBuff
+	){
+		Request req = null;
+
+		MPI.checkInitialization();
+		Object _sendbuff = sendbuff;
+		Object _recvbuff = recvbuff;
+		// send preparations
+		if(sendbuff != null){
+			if(rank() == root){
+				if(!sendtype.isPrimitive()){
+					int _size = size();
+					if(sendObjBuff == null){
+						int cap = recvcount*sendtype.size()*_size;
+						sendObjBuff = ByteBuffer.allocateDirect(cap);
+					}
+					else{
+						// completely reset the buffer
+						sendObjBuff.limit(sendObjBuff.capacity());
+						sendObjBuff.rewind();
+					}
+					if(((Object[])sendbuff)[sendoffset] != null){
+						// if we are ine receive process then
+						// we don't fill the buffer
+						fillBuffer(sendbuff, sendoffset, sendcount*_size,sendtype,sendObjBuff);
+					}
+					_sendbuff = sendObjBuff;
+				}
+			}
+			else{
+				_sendbuff = null;
+			}
+		}
+		// receive preparations
+		if(recvbuff != null){
+			if(!recvtype.isPrimitive()){
+				int cap = recvcount*recvtype.size();
+				if(recvObjBuff == null){
+					throw new NullPointerException("recvObjBuff is null!");
+				}
+				else{
+					// completely reset the buffer
+					recvObjBuff.limit(recvObjBuff.capacity());
+					recvObjBuff.rewind();
+				}
+				_recvbuff = recvObjBuff;
+			}
+		}
+
+		req = _iscatter(_sendbuff, sendoffset, sendcount, sendtype.getHandler(),  
+			_recvbuff, recvoffset, recvcount, recvtype.getHandler(), 
+			root,this.handler);
+
+		return req;
+	}
+	private static native Request _iscatter(
+		Object sendbuff,int sendoffset, int sendcount, long sendtype,
+		Object recvbuff,int recvoffset,int recvcount,long recvtype,
+		int root, long comm);
+	// MPI_Gather
+	public void gather(
+		Object sendbuff,int sendoffset,int sendcount,Datatype sendtype,
+		Object recvbuff,int recvoffset,int recvcount,Datatype recvtype,
+		int root,ByteBuffer sendObjBuff,ByteBuffer recvObjBuff
+	){
+		MPI.checkInitialization();
+		Object _sendbuff = sendbuff;
+		Object _recvbuff = recvbuff;
+		int _size = size();
+
+		// send preparations
+		if(sendbuff != null){
+			if(!sendtype.isPrimitive()){
+				if(sendObjBuff == null){
+					int cap = recvcount*sendtype.size();
+					sendObjBuff = ByteBuffer.allocateDirect(cap);
+				}
+				else{
+					// completely reset the buffer
+					sendObjBuff.limit(sendObjBuff.capacity());
+					sendObjBuff.rewind();
+				}
+				if(((Object[])sendbuff)[sendoffset] != null){
+					// if we are ine receive process then
+					// we don't fill the buffer
+					fillBuffer(sendbuff, sendoffset, sendcount,sendtype,sendObjBuff);
+				}
+				_sendbuff = sendObjBuff;
+			}
+		}
+		// receive preparations
+		if(recvbuff != null){
+			if(!recvtype.isPrimitive()){
+				int cap = recvcount*recvtype.size()*_size;
+				if(recvObjBuff == null){
+					recvObjBuff = ByteBuffer.allocateDirect(cap);
+				}
+				else{
+					// completely reset the buffer
+					recvObjBuff.limit(recvObjBuff.capacity());
+					recvObjBuff.rewind();
+				}
+				_recvbuff = recvObjBuff;
+			}
+		}
+
+		_gather(_sendbuff, sendoffset, sendcount, sendtype.getHandler(),  
+			_recvbuff, recvoffset, recvcount, recvtype.getHandler(), 
+			root,this.handler);
+
+		if(recvbuff != null){
+			if(!recvtype.isPrimitive()){
+				if(rank() == root){
+					Object[] objArr = (Object[])recvbuff;
+					for(int i = recvoffset;i < (recvoffset+recvcount*_size);i++){
+						objArr[i] = recvtype.constructFromByteByffer(recvObjBuff);
+					}
+				}
+			}
+		}
+	}
+	private static native void _gather(
+		Object sendbuff,int sendoffset,int sendcount,long sendtype,
+		Object recvbuff,int recvoffset,int recvcount,long recvtype,
+		int root,long comm);
+	// MPI_IGather
+	public Request igather(
+		Object sendbuff,int sendoffset,int sendcount,Datatype sendtype,
+		Object recvbuff,int recvoffset,int recvcount,Datatype recvtype,
+		int root,ByteBuffer sendObjBuff,ByteBuffer recvObjBuff
+	){
+		Request req = null;
+		
+		MPI.checkInitialization();
+		Object _sendbuff = sendbuff;
+		Object _recvbuff = recvbuff;
+		int _size = size();
+
+		// send preparations
+		if(sendbuff != null){
+			if(!sendtype.isPrimitive()){
+				if(sendObjBuff == null){
+					int cap = recvcount*sendtype.size();
+					sendObjBuff = ByteBuffer.allocateDirect(cap);
+				}
+				else{
+					// completely reset the buffer
+					sendObjBuff.limit(sendObjBuff.capacity());
+					sendObjBuff.rewind();
+				}
+				if(((Object[])sendbuff)[sendoffset] != null){
+					// if we are ine receive process then
+					// we don't fill the buffer
+					fillBuffer(sendbuff, sendoffset, sendcount,sendtype,sendObjBuff);
+				}
+				_sendbuff = sendObjBuff;
+			}
+		}
+		// receive preparations
+		if(recvbuff != null){
+			if(rank() == root){
+				if(!recvtype.isPrimitive()){
+					if(recvObjBuff == null){
+						throw new NullPointerException("recvObjBuff is null!");
+					}
+					else{
+						// completely reset the buffer
+						recvObjBuff.limit(recvObjBuff.capacity());
+						recvObjBuff.rewind();
+					}
+					_recvbuff = recvObjBuff;
+				}
+			}
+			else{
+				_recvbuff = null;
+			}
+		}
+
+		req = _igather(_sendbuff, sendoffset, sendcount, sendtype.getHandler(),  
+			_recvbuff, recvoffset, recvcount, recvtype.getHandler(), 
+			root,this.handler);
+
+		return req;
+	}
+	private static native Request _igather(
+		Object sendbuff,int sendoffset,int sendcount,long sendtype,
+		Object recvbuff,int recvoffset,int recvcount,long recvtype,
+		int root,long comm);
+	// MPI_Allgather
+	public void allgather(
+		Object sendbuff,int sendoffset,int sendcount,Datatype sendtype,
+		Object recvbuff,int recvoffset,int recvcount,Datatype recvtype,
+		ByteBuffer sendObjBuff,ByteBuffer recvObjBuff
+	){
+		MPI.checkInitialization();
+		Object _sendbuff = sendbuff;
+		Object _recvbuff = recvbuff;
+		int _size = size();
+
+		// send preparations
+		if(sendbuff != null){
+			if(!sendtype.isPrimitive()){
+				if(sendObjBuff == null){
+					int cap = recvcount*sendtype.size();
+					sendObjBuff = ByteBuffer.allocateDirect(cap);
+				}
+				else{
+					// completely reset the buffer
+					sendObjBuff.limit(sendObjBuff.capacity());
+					sendObjBuff.rewind();
+				}
+				if(((Object[])sendbuff)[sendoffset] != null){
+					// if we are ine receive process then
+					// we don't fill the buffer
+					fillBuffer(sendbuff, sendoffset, sendcount,sendtype,sendObjBuff);
+				}
+				_sendbuff = sendObjBuff;
+			}
+		}
+		// receive preparations
+		if(recvbuff != null){
+			if(!recvtype.isPrimitive()){
+				int cap = recvcount*recvtype.size()*_size;
+				if(recvObjBuff == null){
+					recvObjBuff = ByteBuffer.allocateDirect(cap);
+				}
+				else{
+					// completely reset the buffer
+					recvObjBuff.limit(recvObjBuff.capacity());
+					recvObjBuff.rewind();
+				}
+				_recvbuff = recvObjBuff;
+			}
+		}
+
+		_allgather(_sendbuff, sendoffset, sendcount, sendtype.getHandler(),  
+			_recvbuff, recvoffset, recvcount, recvtype.getHandler(), 
+			this.handler);
+
+		if(recvbuff != null){
+			if(!recvtype.isPrimitive()){
+				Object[] objArr = (Object[])recvbuff;
+				for(int i = recvoffset;i < (recvoffset+recvcount*_size);i++){
+					objArr[i] = recvtype.constructFromByteByffer(recvObjBuff);
+				}	
+			}
+		}
+	}
+	private static native void _allgather(
+		Object sendbuff, int sendoffset,int sendcount,long sendtype,
+		Object recvbuff, int recvoffset,int recvcount,long recvtype,
+		long comm
+	);
+	// MPI_Iallgather
+	public Request iallgather(
+		Object sendbuff,int sendoffset,int sendcount,Datatype sendtype,
+		Object recvbuff,int recvoffset,int recvcount,Datatype recvtype,
+		ByteBuffer sendObjBuff,ByteBuffer recvObjBuff
+	){
+		Request req = null;
+
+		MPI.checkInitialization();
+		Object _sendbuff = sendbuff;
+		Object _recvbuff = recvbuff;
+
+		// send preparations
+		if(sendbuff != null){
+			if(!sendtype.isPrimitive()){
+				if(sendObjBuff == null){
+					int cap = recvcount*sendtype.size();
+					sendObjBuff = ByteBuffer.allocateDirect(cap);
+				}
+				else{
+					// completely reset the buffer
+					sendObjBuff.limit(sendObjBuff.capacity());
+					sendObjBuff.rewind();
+				}
+				if(((Object[])sendbuff)[sendoffset] != null){
+					// if we are ine receive process then
+					// we don't fill the buffer
+					fillBuffer(sendbuff, sendoffset, sendcount,sendtype,sendObjBuff);
+				}
+				_sendbuff = sendObjBuff;
+			}
+		}
+		// receive preparations
+		if(recvbuff != null){
+			if(!recvtype.isPrimitive()){
+				if(recvObjBuff == null){
+					throw new NullPointerException("recvObjBuff is null!");
+				}
+				else{
+					// completely reset the buffer
+					recvObjBuff.limit(recvObjBuff.capacity());
+					recvObjBuff.rewind();
+				}
+				_recvbuff = recvObjBuff;
+			}
+		}
+
+		req = _iallgather(_sendbuff, sendoffset, sendcount, sendtype.getHandler(),  
+			_recvbuff, recvoffset, recvcount, recvtype.getHandler(), 
+			this.handler);
+
+		return req;
+	}
+	private static native Request _iallgather(
+		Object sendbuff, int sendoffset,int sendcount,long sendtype,
+		Object recvbuff, int recvoffset,int recvcount,long recvtype,
+		long comm);
+	// MPI_Alltoall
+	public void alltoall(
+		Object sendbuff,int sendoffset,int sendcount,Datatype sendtype,
+		Object recvbuff,int recvoffset,int recvcount,Datatype recvtype,
+		ByteBuffer sendObjBuff,ByteBuffer recvObjBuff
+	){
+		MPI.checkInitialization();
+		Object _sendbuff = sendbuff;
+		Object _recvbuff = recvbuff;
+		int _size = size();
+
+		// send preparations
+		if(sendbuff != null){
+			if(!sendtype.isPrimitive()){
+				if(sendObjBuff == null){
+					int cap = recvcount*sendtype.size()*_size;
+					sendObjBuff = ByteBuffer.allocateDirect(cap);
+				}
+				else{
+					// completely reset the buffer
+					sendObjBuff.limit(sendObjBuff.capacity());
+					sendObjBuff.rewind();
+				}
+				if(((Object[])sendbuff)[sendoffset] != null){
+					// if we are ine receive process then
+					// we don't fill the buffer
+					fillBuffer(sendbuff, sendoffset, sendcount*_size,sendtype,sendObjBuff);
+				}
+				_sendbuff = sendObjBuff;
+			}
+		}
+		// receive preparations
+		if(recvbuff != null){
+			if(!recvtype.isPrimitive()){
+				int cap = recvcount*recvtype.size()*_size;
+				if(recvObjBuff == null){
+					recvObjBuff = ByteBuffer.allocateDirect(cap);
+				}
+				else{
+					// completely reset the buffer
+					recvObjBuff.limit(recvObjBuff.capacity());
+					recvObjBuff.rewind();
+				}
+				_recvbuff = recvObjBuff;
+			}
+		}
+
+		_alltoall(_sendbuff, sendoffset, sendcount, sendtype.getHandler(),  
+			_recvbuff, recvoffset, recvcount, recvtype.getHandler(), 
+			this.handler);
+
+		if(recvbuff != null){
+			if(!recvtype.isPrimitive()){
+				Object[] objArr = (Object[])recvbuff;
+				for(int i = recvoffset;i < (recvoffset+recvcount*_size);i++){
+					objArr[i] = recvtype.constructFromByteByffer(recvObjBuff);
+				}	
+			}
+		}
+	}
+	private static native void _alltoall(
+		Object sendbuff, int sendoffset,int sendcount,long sendtype,
+		Object recvbuff, int recvoffset,int recvcount,long recvtype,
+		long comm);
+	// MPI_Ialltoall
+	public Request ialltoall(
+		Object sendbuff,int sendoffset,int sendcount,Datatype sendtype,
+		Object recvbuff,int recvoffset,int recvcount,Datatype recvtype,
+		ByteBuffer sendObjBuff,ByteBuffer recvObjBuff
+	){
+		Request req = null;
+		Object _sendbuff = sendbuff;
+		Object _recvbuff = recvbuff;
+		int _size = size();
+		MPI.checkInitialization();
+
+		// send preparations
+		if(sendbuff != null){
+			if(!sendtype.isPrimitive()){
+				if(sendObjBuff == null){
+					int cap = recvcount*sendtype.size()*_size;
+					sendObjBuff = ByteBuffer.allocateDirect(cap);
+				}
+				else{
+					// completely reset the buffer
+					sendObjBuff.limit(sendObjBuff.capacity());
+					sendObjBuff.rewind();
+				}
+				if(((Object[])sendbuff)[sendoffset] != null){
+					// if we are ine receive process then
+					// we don't fill the buffer
+					fillBuffer(sendbuff, sendoffset, sendcount*_size,sendtype,sendObjBuff);
+				}
+				_sendbuff = sendObjBuff;
+			}
+		}
+		// receive preparations
+		if(recvbuff != null){
+			if(!recvtype.isPrimitive()){
+				if(recvObjBuff == null){
+					throw new NullPointerException("recvObjBuff is null!");
+				}
+				else{
+					// completely reset the buffer
+					recvObjBuff.limit(recvObjBuff.capacity());
+					recvObjBuff.rewind();
+				}
+				_recvbuff = recvObjBuff;
+			}
+		}
+
+		req = _ialltoall(_sendbuff, sendoffset, sendcount, sendtype.getHandler(),  
+			_recvbuff, recvoffset, recvcount, recvtype.getHandler(), 
+			this.handler);
+
+		return req;
+	}
+	private static native Request _ialltoall(
+		Object sendbuff, int sendoffset,int sendcount,long sendtype,
+		Object recvbuff, int recvoffset,int recvcount,long recvtype,
+		long comm);
+	// MPI_Reduce
+	public void reduce(Object sendbuff,Object recvbuff,
+		int sendoffset,int recvoffset,int count,Datatype datatype,Op op,int root,
+		ByteBuffer sendObjBuff,ByteBuffer recvObjBuff
+	){
+		Object _sendbuff = sendbuff;
+		Object _recvbuff = recvbuff;
+		MPI.checkInitialization();
+
+		// send preparations
+		if(sendbuff != null){
+			if(!datatype.isPrimitive()){
+				if(sendObjBuff == null){
+					int cap = count*datatype.size();
+					sendObjBuff = ByteBuffer.allocateDirect(cap);
+				}
+				else{
+					// completely reset the buffer
+					sendObjBuff.limit(sendObjBuff.capacity());
+					sendObjBuff.rewind();
+				}
+				if(((Object[])sendbuff)[sendoffset] != null){
+					// if we are ine receive process then
+					// we don't fill the buffer
+					fillBuffer(sendbuff, sendoffset, count,datatype,sendObjBuff);
+				}
+				_sendbuff = sendObjBuff;
+			}
+		}
+		// receive preparations
+		if(recvbuff != null){
+			if(!datatype.isPrimitive()){
+				int cap = count*datatype.size();
+				if(recvObjBuff == null){
+					recvObjBuff = ByteBuffer.allocateDirect(cap);
+				}
+				else{
+					// completely reset the buffer
+					recvObjBuff.limit(recvObjBuff.capacity());
+					recvObjBuff.rewind();
+				}
+				_recvbuff = recvObjBuff;
+			}
+		}
+
+		_reduce(_sendbuff, _recvbuff, recvoffset, sendoffset, count,
+			datatype.getHandler(), op.getHandler(), root, this.handler);
+		
+		if(recvbuff != null){
+			if(!datatype.isPrimitive()){
+				Object[] objArr = (Object[])recvbuff;
+				for(int i = recvoffset;i < (recvoffset+count);i++){
+					objArr[i] = datatype.constructFromByteByffer(recvObjBuff);
+				}	
+			}
+		}
+	}
+	private static native void _reduce(Object sendbuff,Object recvbuff,
+		int recvoffset,int sendoffset,int sendcount,long datatype,long op,int root,long comm);
+	public  Request ireduce(Object sendbuff,Object recvbuff,
+		int sendoffset,int recvoffset,int count,Datatype type,Op op,int root,
+		ByteBuffer sendObjBuff,ByteBuffer recvObjBuff
+	){
+		Request req = null;
+		Object _sendbuff = sendbuff;
+		Object _recvbuff = recvbuff;
+		MPI.checkInitialization();
+
+		// send preparations
+		if(sendbuff != null){
+			if(!type.isPrimitive()){
+				if(sendObjBuff == null){
+					int cap = count*type.size();
+					sendObjBuff = ByteBuffer.allocateDirect(cap);
+				}
+				else{
+					// completely reset the buffer
+					sendObjBuff.limit(sendObjBuff.capacity());
+					sendObjBuff.rewind();
+				}
+				if(((Object[])sendbuff)[sendoffset] != null){
+					// if we are ine receive process then
+					// we don't fill the buffer
+					fillBuffer(sendbuff, sendoffset, count,type,sendObjBuff);
+				}
+				_sendbuff = sendObjBuff;
+			}
+		}
+		// receive preparations
+		if(recvbuff != null){
+			if(!type.isPrimitive()){
+				int cap = count*type.size();
+				if(recvObjBuff == null){
+					recvObjBuff = ByteBuffer.allocateDirect(cap);
+				}
+				else{
+					// completely reset the buffer
+					recvObjBuff.limit(recvObjBuff.capacity());
+					recvObjBuff.rewind();
+				}
+				_recvbuff = recvObjBuff;
+			}
+		}
+
+		req = _ireduce(_sendbuff, _recvbuff, sendoffset, recvoffset, count,
+			type.getHandler(), op.getHandler(), root,this.handler);
+
+		return req;
+	}
+	private static native Request _ireduce(Object sendBuff,Object recvBuff,
+		int sendoffset,int recvoffset,int sendcount,long datatype,long op,int root,long comm);
+	public void allreduce(Object sendbuff,Object recvbuff,int sendoffset,int recvoffset,
+		int count,Datatype datatype,Op op,ByteBuffer sendObjBuff,ByteBuffer recvObjBuff
+	){
+		Object _sendbuff = sendbuff;
+		Object _recvbuff = recvbuff;
+		MPI.checkInitialization();
+
+		// send preparations
+		if(sendbuff != null){
+			if(!datatype.isPrimitive()){
+				if(sendObjBuff == null){
+					int cap = count*datatype.size();
+					sendObjBuff = ByteBuffer.allocateDirect(cap);
+				}
+				else{
+					// completely reset the buffer
+					sendObjBuff.limit(sendObjBuff.capacity());
+					sendObjBuff.rewind();
+				}
+				if(((Object[])sendbuff)[sendoffset] != null){
+					// if we are ine receive process then
+					// we don't fill the buffer
+					fillBuffer(sendbuff, sendoffset, count,datatype,sendObjBuff);
+				}
+				_sendbuff = sendObjBuff;
+			}
+		}
+		// receive preparations
+		if(recvbuff != null){
+			if(!datatype.isPrimitive()){
+				int cap = count*datatype.size();
+				if(recvObjBuff == null){
+					recvObjBuff = ByteBuffer.allocateDirect(cap);
+				}
+				else{
+					// completely reset the buffer
+					recvObjBuff.limit(recvObjBuff.capacity());
+					recvObjBuff.rewind();
+				}
+				_recvbuff = recvObjBuff;
+			}
+		}
+
+		_allreduce(_sendbuff, _recvbuff, recvoffset, sendoffset, count,
+			datatype.getHandler(), op.getHandler(), this.handler);
+		
+		if(recvbuff != null){
+			if(!datatype.isPrimitive()){
+				Object[] objArr = (Object[])recvbuff;
+				for(int i = recvoffset;i < (recvoffset+count);i++){
+					objArr[i] = datatype.constructFromByteByffer(recvObjBuff);
+				}	
+			}
+		}
+	}
+	private static native void _allreduce(Object sendbuff,Object recbuff,int sendoffset,int recvoffset,
+		int count,long type,long op,long comm);
+	public  Request iallreduce(Object sendbuff,Object recvbuff,
+		int sendoffset,int recvoffset,int count,Datatype type,Op op,
+		ByteBuffer sendObjBuff,ByteBuffer recvObjBuff
+	){
+		Request req = null;
+		Object _sendbuff = sendbuff;
+		Object _recvbuff = recvbuff;
+		MPI.checkInitialization();
+
+		// send preparations
+		if(sendbuff != null){
+			if(!type.isPrimitive()){
+				if(sendObjBuff == null){
+					int cap = count*type.size();
+					sendObjBuff = ByteBuffer.allocateDirect(cap);
+				}
+				else{
+					// completely reset the buffer
+					sendObjBuff.limit(sendObjBuff.capacity());
+					sendObjBuff.rewind();
+				}
+				if(((Object[])sendbuff)[sendoffset] != null){
+					// if we are ine receive process then
+					// we don't fill the buffer
+					fillBuffer(sendbuff, sendoffset, count,type,sendObjBuff);
+				}
+				_sendbuff = sendObjBuff;
+			}
+		}
+		// receive preparations
+		if(recvbuff != null){
+			if(!type.isPrimitive()){
+				int cap = count*type.size();
+				if(recvObjBuff == null){
+					recvObjBuff = ByteBuffer.allocateDirect(cap);
+				}
+				else{
+					// completely reset the buffer
+					recvObjBuff.limit(recvObjBuff.capacity());
+					recvObjBuff.rewind();
+				}
+				_recvbuff = recvObjBuff;
+			}
+		}
+
+		req = _iallreduce(_sendbuff, _recvbuff, sendoffset, recvoffset, count,
+			type.getHandler(), op.getHandler(),this.handler);
+
+		return req;
+	}
+	private static native Request _iallreduce(Object sendBuff,Object recvBuff,
+		int sendoffset,int recvoffset,int sendcount,long datatype,long op,long comm);
 }

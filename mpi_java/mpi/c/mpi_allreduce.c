@@ -1,16 +1,16 @@
-#include "mpi_Intracomm.h"
+#include "mpi_Comm.h"
 #include "jni_mpi.h"
 #include "jni_mpi_op.h"
 
 #include "malloc.h"
 
 /*
- * Class:     mpi_Intracomm
+ * Class:     mpi_Comm
  * Method:    _allreduce
  * Signature: (Ljava/lang/Object;Ljava/lang/Object;IIIJJJ)V
  */
 JNIEXPORT void JNICALL 
-Java_mpi_Intracomm__1allreduce(
+Java_mpi_Comm__1allreduce(
     JNIEnv *env, jclass class, 
     jobject sendbuff, jobject recvbuff, jint sendoffset, jint recvoffset, 
     jint count, jlong datatype, jlong op, jlong comm)

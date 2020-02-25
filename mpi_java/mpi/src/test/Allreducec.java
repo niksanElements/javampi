@@ -14,7 +14,7 @@ public class Allreducec {
 			
 			@Override
 			public int operation(int a, int b) {
-				System.out.printf("%d %d\n",a,b);
+				// System.out.printf("%d %d\n",a,b);
 				return a+b;
 			}
 		},true);
@@ -26,7 +26,11 @@ public class Allreducec {
 
         MPI.COMM_WORLD.allreduce(sendbuff, recvbuff, 0, 0, 1, MPI.INT, op,null,null);
 
-        System.out.println(recvbuff[0]);
+        int size = MPI.COMM_WORLD.size();
+        int sum = size*(size-1)/2;
+        boolean check  = sum == recvbuff[0];
+ 
+        Utils.check(rank,check,"Allreducec");
 
         op.free();
 

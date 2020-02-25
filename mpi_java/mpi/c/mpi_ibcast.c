@@ -1,16 +1,16 @@
-#include "mpi_Intracomm.h"
+#include "mpi_Comm.h"
 #include "jni_mpi.h"
 #include "jni_mpi_request.h"
 
 #include "malloc.h"
 
 /*
- * Class:     mpi_Intracomm
+ * Class:     mpi_Comm
  * Method:    _ibcast
  * Signature: (Ljava/lang/Object;IIJIJ)Lmpi/Request;
  */
 JNIEXPORT jobject JNICALL 
-Java_mpi_Intracomm__1ibcast(
+Java_mpi_Comm__1ibcast(
     JNIEnv *env, jclass class, 
     jobject buff, jint offset, jint count, jlong datatype, 
     jint root, jlong comm)

@@ -12,7 +12,8 @@ JAVA_SOURCES=	./src/mpi/*.java	\
 				./src/mpi/exception/*.java \
 				./src/test/types/*.java \
 				./src/mpi/datatype/*.java	\
-				./src/mpi/op/*.java
+				./src/mpi/op/*.java			\
+				./src/test/pathdag/*java
 
 LIB=-L$(MPICH_INSTALL_DIR)/lib
 C_SOURCES = 		./c/jni_mpi_types.c \

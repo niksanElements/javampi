@@ -28,8 +28,8 @@ public class Alltoallo {
         Here[] hRecv = new Here[10];
         for(int i = 0;i < 10;i++){
             hSend[i] = new Here();
-            hSend[i].setId(rank+i);
-            hSend[i].setId2((rank*rank)+i);
+            hSend[i].setId(rank+rank);
+            hSend[i].setId2((rank*rank));
         }
         
         ByteBuffer buff = ByteBuffer.allocateDirect(124);
@@ -39,10 +39,17 @@ public class Alltoallo {
         long end = System.nanoTime();
     
         System.out.printf("%f\n", (end-start)/1000000.0);
-        Utils.sleepRand(500);
-        for(int i = 0;i < 10;i++){
-            System.out.printf("%d, ID: %d ID2: %d\n",i,hRecv[i].getId(),hRecv[i].getId2());
+        boolean check = true;
+        for(int i = 0;i < 10 && check;i++){
+            int value_id = i+i;
+            int value_id2 = i*i;
+            
+            if(value_id != hRecv[i].getId() || value_id2 != hRecv[i].getId2()){
+                check = false;
+            }
         }
+
+        Utils.check(rank, check, "Alltoallo");
 
         MPI.Finalize();
     }

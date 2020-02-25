@@ -9,7 +9,7 @@ public class Bcast {
         MPI.Init(args);
 
         int[] buffer = new int[10];
-
+        
         int rank = MPI.COMM_WORLD.rank();
 
         if(rank == 0){
@@ -25,11 +25,11 @@ public class Bcast {
             buffer[9] = 0xCF;
         }
 
-        MPI.COMM_WORLD.bcast(buffer,0,1,MPI.INT,0,null);
+        MPI.COMM_WORLD.bcast(buffer,0,2,MPI.INT,0,null);
 
         Utils.sleepRand(300);
-        // buffer[0] = rank;
-        System.out.println(Arrays.toString(buffer));
+        boolean check = (buffer[0] == 1 && buffer[1] == 0x55);
+        Utils.check(rank, check, "Bcast");
 
         MPI.Finalize();
 

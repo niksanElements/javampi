@@ -71,14 +71,41 @@ public class Bcasto {
         }
         
         MPI.COMM_WORLD.bcast(pArr,0,1,person,0,null);
-        Utils.sleepRand(300);
-        System.out.printf("0x%x",pArr[0].getAge());
-        System.out.println(Arrays.toString(pArr[0].getName()));
-        System.out.println(Arrays.toString(pArr[0].getSome()));
-        System.out.println(pArr[0].getHere().getId());
-        for(int i = 0;i < 3;i++) {
-            System.out.println(pArr[0].getH()[i].getId());
+        
+        boolean check = true;
+        check = pArr[0].getAge() == 0x55AA55AA;
+        if(check){
+            System.out.println(0);
+            int arr[] = new int[]{0,0x000000FF,0x000000FF,0x000000FF};
+            // check = Arrays.equals(pArr[0].getName(),new int[]{rank,0x000000FF,0x000000FF,0x000000FF});
+            for(int i = 0;i < 4 && check;i++){
+                check = pArr[0].getName()[i] == arr[i];
+            }
         }
+        if(check){
+            System.out.println(1);
+            check = Arrays.equals(pArr[0].getSome(), new long[] {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20});
+        }
+        if(check){
+            System.out.println(2);
+            check = pArr[0].getHere().getId() == 12;
+        }
+        if(check){
+            System.out.println(3);
+            for(int i = 0;i < 3 && check;i++) {
+               check = pArr[0].getH()[i].getId() == i+13;
+            }
+        }
+
+        Utils.check(rank, check, "Bcasto");
+
+        // System.out.printf("0x%x",pArr[0].getAge());
+        // System.out.println(Arrays.toString(pArr[0].getName()));
+        // System.out.println(Arrays.toString(pArr[0].getSome()));
+        // System.out.println(pArr[0].getHere().getId());
+        // for(int i = 0;i < 3;i++) {
+        //     System.out.println(pArr[0].getH()[i].getId());
+        // }
         // buffer[0] = rank;
 
         MPI.Finalize();

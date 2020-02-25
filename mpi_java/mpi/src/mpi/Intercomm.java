@@ -11,6 +11,7 @@ public class Intercomm extends Comm {
     }
 
     // MPI_Comm_test_inter
+    // TODO: change to Comm
     public boolean test(){
         return _test(this.handler);
     }
